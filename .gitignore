@@ -1,0 +1,3 @@
+# JSON-Backups der Trainingsdaten sollen NICHT ins öffentliche Repo
+workout-tracker-*.json
+*.local.json

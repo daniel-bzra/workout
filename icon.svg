@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="112" fill="#0b0d11"/>
+  <g stroke="#4f8cff" stroke-width="34" stroke-linecap="round">
+    <!-- Hantelstange -->
+    <line x1="168" y1="256" x2="344" y2="256"/>
+    <!-- linke Gewichte -->
+    <line x1="146" y1="196" x2="146" y2="316"/>
+    <line x1="100" y1="220" x2="100" y2="292"/>
+    <!-- rechte Gewichte -->
+    <line x1="366" y1="196" x2="366" y2="316"/>
+    <line x1="412" y1="220" x2="412" y2="292"/>
+  </g>
+</svg>

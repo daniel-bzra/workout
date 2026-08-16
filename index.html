@@ -1,0 +1,1168 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d11">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Workout">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>Workout Tracker</title>
+<style>
+  :root{
+    --bg:#0b0d11;
+    --surface:#141821;
+    --surface-2:#1c2230;
+    --surface-3:#252d3d;
+    --line:#2b3446;
+    --text:#eef2f8;
+    --muted:#9aa6bd;
+    --dim:#6b7689;
+    --accent:#4f8cff;
+    --accent-dim:#1d3a6b;
+    --ok:#31c86a;
+    --warn:#ffb020;
+    --danger:#ff5c5c;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    font-size:17px;line-height:1.35;
+    padding-bottom:calc(96px + env(safe-area-inset-bottom));
+    overscroll-behavior-y:none;
+  }
+  button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer}
+  input{font-family:inherit;color:inherit}
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky;top:0;z-index:30;background:rgba(11,13,17,.92);
+    backdrop-filter:blur(12px);border-bottom:1px solid var(--line);
+    padding:calc(10px + env(safe-area-inset-top)) 12px 10px;
+  }
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .brand{font-size:14px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+  .iconbtn{
+    width:44px;height:44px;border-radius:12px;background:var(--surface-2);
+    display:flex;align-items:center;justify-content:center;font-size:20px;
+  }
+  .iconbtn:active{background:var(--surface-3)}
+  .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .tab{
+    height:52px;border-radius:14px;background:var(--surface);border:1px solid var(--line);
+    font-size:17px;font-weight:700;color:var(--muted);
+  }
+  .tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  .tab:active{transform:scale(.98)}
+  .dayline{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:10px}
+  .daylabel{font-size:14px;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .progress{font-size:14px;font-weight:700;color:var(--dim);white-space:nowrap}
+  .progress b{color:var(--text)}
+
+  /* ---------- Cards ---------- */
+  main{padding:12px;display:flex;flex-direction:column;gap:10px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .card.open{border-color:#3a4560}
+  .cardhead{
+    width:100%;display:flex;align-items:center;gap:12px;padding:16px 14px;text-align:left;
+  }
+  .ch-main{flex:1;min-width:0}
+  .ch-name{font-size:19px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ch-sub{font-size:13px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .badge{
+    font-size:13px;font-weight:800;padding:6px 10px;border-radius:999px;
+    background:var(--surface-2);color:var(--muted);white-space:nowrap;
+  }
+  .badge.part{background:#2a3a1f;color:#a9d97a}
+  .badge.full{background:#17301f;color:var(--ok)}
+  .chev{width:22px;height:22px;flex:none;color:var(--dim);transition:transform .18s}
+  .card.open .chev{transform:rotate(180deg)}
+  .cardbody{display:none;padding:0 14px 14px;border-top:1px solid var(--line)}
+  .card.open .cardbody{display:block}
+
+  /* ---------- Demo ---------- */
+  .demo{margin:14px 0;border-radius:12px;overflow:hidden;background:#0f131b;border:1px solid var(--line)}
+  .demo img,.demo video{display:block;width:100%;max-height:230px;object-fit:contain;background:#0f131b}
+  .demo-ph{
+    padding:22px 14px;text-align:center;color:var(--dim);font-size:13px;line-height:1.5;
+    border:1px dashed var(--line);border-radius:12px;background:#0f131b;
+  }
+  .demo-ph .big{font-size:26px;display:block;margin-bottom:6px;opacity:.6}
+
+  /* ---------- Sätze ---------- */
+  .set{margin-top:12px}
+  .lastline{font-size:13px;color:var(--warn);margin:0 0 5px 42px;font-weight:600}
+  .lastline.none{color:var(--dim);font-weight:500}
+  .setrow{display:flex;align-items:center;gap:8px}
+  .setno{
+    width:34px;height:56px;flex:none;display:flex;align-items:center;justify-content:center;
+    font-size:15px;font-weight:800;color:var(--dim);
+  }
+  .field{
+    flex:1;min-width:0;position:relative;display:block;height:56px;
+    background:var(--surface-2);border:1px solid var(--line);border-radius:12px;
+  }
+  .field input{
+    width:100%;height:100%;background:none;border:0;outline:none;
+    font-size:24px;font-weight:700;padding:0 42px 0 12px;border-radius:12px;
+  }
+  .field input::placeholder{color:#4c5666;font-weight:600}
+  .field:focus-within{border-color:var(--accent)}
+  .unit{
+    position:absolute;right:12px;top:50%;transform:translateY(-50%);
+    font-size:13px;font-weight:700;color:var(--dim);pointer-events:none;
+  }
+  .check{
+    width:56px;height:56px;flex:none;border-radius:12px;background:var(--surface-2);
+    border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+    font-size:24px;color:var(--dim);
+  }
+  .check[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:#06210f}
+  .set.done .field{opacity:.62}
+
+  .cardfoot{display:flex;gap:8px;margin-top:14px}
+  .ghost{
+    flex:1;height:48px;border-radius:12px;background:var(--surface-2);
+    border:1px solid var(--line);font-size:15px;font-weight:700;color:var(--muted);
+  }
+  .ghost:active{background:var(--surface-3)}
+
+  /* ---------- Bottombar ---------- */
+  .bottombar{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;
+    padding:12px 12px calc(12px + env(safe-area-inset-bottom));
+    background:linear-gradient(to top,rgba(11,13,17,.98) 62%,rgba(11,13,17,0));
+  }
+  .finish{
+    width:100%;height:60px;border-radius:16px;background:var(--accent);color:#fff;
+    font-size:19px;font-weight:800;
+  }
+  .finish:disabled{background:var(--surface-2);color:var(--dim)}
+  .finish:active:not(:disabled){transform:scale(.99)}
+
+  /* ---------- Sheets ---------- */
+  .sheet{
+    position:fixed;inset:0;z-index:60;background:var(--bg);display:none;
+    flex-direction:column;
+  }
+  .sheet.open{display:flex}
+  .sheethead{
+    position:sticky;top:0;display:flex;align-items:center;gap:10px;
+    padding:calc(10px + env(safe-area-inset-top)) 12px 10px;
+    border-bottom:1px solid var(--line);background:var(--bg);
+  }
+  .sheethead h2{flex:1;margin:0;font-size:18px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sheetbody{flex:1;overflow-y:auto;padding:14px 12px calc(28px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+
+  .block{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:10px}
+  .block h3{margin:0 0 10px;font-size:15px;font-weight:800;color:var(--muted)}
+  .lbl{display:block;font-size:12px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 5px}
+  .txt{
+    width:100%;height:50px;background:var(--surface-2);border:1px solid var(--line);
+    border-radius:12px;padding:0 12px;font-size:17px;outline:none;
+  }
+  .txt:focus{border-color:var(--accent)}
+  .row2{display:flex;gap:8px}
+  .row2>div{flex:1;min-width:0}
+  .btnrow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .btn{
+    flex:1;min-width:130px;height:50px;border-radius:12px;background:var(--surface-2);
+    border:1px solid var(--line);font-size:15px;font-weight:700;
+  }
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.danger{color:var(--danger)}
+  .btn:active{transform:scale(.99)}
+  .hint{font-size:13px;color:var(--dim);line-height:1.5;margin:8px 0 0}
+  .hint a{color:var(--accent)}
+
+  .exrow{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+  .exrow .top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .exrow .top .txt{flex:1}
+  .mini{
+    width:44px;height:44px;flex:none;border-radius:11px;background:var(--surface-2);
+    border:1px solid var(--line);font-size:17px;display:flex;align-items:center;justify-content:center;
+  }
+  .mini.del{color:var(--danger)}
+
+  /* ---------- Verlauf ---------- */
+  .hentry{border-bottom:1px solid var(--line);padding:12px 2px}
+  .hentry:last-child{border-bottom:0}
+  .hdate{font-size:13px;font-weight:700;color:var(--muted);margin-bottom:4px}
+  .hsets{font-size:17px;font-weight:700;letter-spacing:.01em}
+  .hsets span{color:var(--dim);font-weight:600}
+  .chartwrap{background:var(--surface-2);border-radius:12px;padding:8px 4px;margin-top:4px}
+  .empty{color:var(--dim);font-size:15px;text-align:center;padding:26px 10px;line-height:1.5}
+
+  .toast{
+    position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translate(-50%,14px);
+    background:var(--surface-3);border:1px solid var(--line);color:var(--text);
+    padding:12px 18px;border-radius:999px;font-size:15px;font-weight:700;
+    z-index:90;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:90vw;text-align:center;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="topbar">
+    <div class="brand">Workout Tracker</div>
+    <div style="display:flex;gap:8px">
+      <button class="iconbtn" id="btnPlan" title="Plan bearbeiten" aria-label="Plan bearbeiten">✎</button>
+      <button class="iconbtn" id="btnData" title="Daten" aria-label="Daten">⚙</button>
+    </div>
+  </div>
+  <div class="tabs" id="tabs" role="tablist"></div>
+  <div class="dayline">
+    <div class="daylabel" id="dayLabel"></div>
+    <div class="progress" id="progress"></div>
+  </div>
+</header>
+
+<main id="list"></main>
+
+<div class="bottombar">
+  <button class="finish" id="btnFinish">Training beenden</button>
+</div>
+
+<!-- Plan-Editor -->
+<div class="sheet" id="sheetPlan">
+  <div class="sheethead">
+    <button class="iconbtn" data-close="sheetPlan" aria-label="Schliessen">✕</button>
+    <h2>Plan bearbeiten</h2>
+  </div>
+  <div class="sheetbody">
+    <div class="tabs" id="planTabs" style="margin-bottom:14px"></div>
+    <label class="lbl">Bezeichnung des Tages</label>
+    <input class="txt" id="planLabel" placeholder="z.B. Rücken, Trizeps, Seitheben">
+    <div style="height:16px"></div>
+    <div id="planList"></div>
+    <button class="btn primary" id="btnAddEx" style="width:100%">+ Übung hinzufügen</button>
+    <p class="hint">
+      Änderungen werden sofort gespeichert. Der Verlauf hängt an der Übung selbst –
+      Umbenennen behält also die alten Daten.
+    </p>
+  </div>
+</div>
+
+<!-- Verlauf -->
+<div class="sheet" id="sheetHist">
+  <div class="sheethead">
+    <button class="iconbtn" data-close="sheetHist" aria-label="Schliessen">✕</button>
+    <h2 id="histTitle">Verlauf</h2>
+  </div>
+  <div class="sheetbody" id="histBody"></div>
+</div>
+
+<!-- Daten -->
+<div class="sheet" id="sheetData">
+  <div class="sheethead">
+    <button class="iconbtn" data-close="sheetData" aria-label="Schliessen">✕</button>
+    <h2>Daten</h2>
+  </div>
+  <div class="sheetbody">
+    <div class="block">
+      <h3>Sicherung</h3>
+      <p class="hint" style="margin-top:0">
+        Alles liegt nur in diesem Browser (localStorage). Cache leeren oder ein neues Handy =
+        Daten weg. Darum ab und zu exportieren.
+      </p>
+      <div class="btnrow">
+        <button class="btn primary" id="btnExport">JSON exportieren</button>
+        <button class="btn" id="btnImport">JSON importieren</button>
+      </div>
+      <input type="file" id="fileImport" accept="application/json,.json" style="display:none">
+    </div>
+
+    <div class="block">
+      <h3>Statistik</h3>
+      <div id="stats" class="hint" style="margin-top:0"></div>
+    </div>
+
+    <div class="block">
+      <h3>Demo-Animationen</h3>
+      <p class="hint" style="margin-top:0">
+        Im Plan-Editor pro Übung eine <b>demoUrl</b> eintragen (GIF, PNG, MP4 oder WebM).
+        Auch lokale Pfade gehen, z.B. <code>demos/latzug.mp4</code> neben dieser Datei.<br><br>
+        Frei nutzbare Quellen: <b>wger.de</b> (Open Source, freie Lizenz),
+        <b>Wikimedia Commons</b> – oder im Gym selbst filmen. Fremde GIFs von
+        Fitness-Seiten sind meist urheberrechtlich geschützt.
+      </p>
+    </div>
+
+    <div class="block">
+      <h3>Zurücksetzen</h3>
+      <div class="btnrow">
+        <button class="btn danger" id="btnResetPlan">Plan zurücksetzen</button>
+        <button class="btn danger" id="btnResetAll">Alle Daten löschen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   1. Datenmodell / Default-Plan
+   ============================================================ */
+
+const DEFAULT_PLAN = {
+  ruecken: {
+    label: "Rücken, Trizeps, Seitheben",
+    exercises: [
+      { name: "Latzug",                      sets: 3, reps: "8-12",  demoUrl: "" },
+      { name: "Wide Grip Row",               sets: 3, reps: "8-12",  demoUrl: "" },
+      { name: "Einarmiges Kurzhantelrudern", sets: 3, reps: "10/S",  demoUrl: "" },
+      { name: "Seitheben",                   sets: 3, reps: "12-15", demoUrl: "" },
+      { name: "Trizeps Pushdown",            sets: 3, reps: "10-12", demoUrl: "" },
+      { name: "Overhead Trizeps Extension",  sets: 3, reps: "10-12", demoUrl: "" },
+      { name: "Scap Flies",                  sets: 2, reps: "15",    demoUrl: "" }
+    ]
+  },
+  brust: {
+    label: "Brust, Bizeps",
+    exercises: [
+      { name: "Schrägbankdrücken", sets: 3, reps: "6-10",  demoUrl: "" },
+      { name: "Bankdrücken flach", sets: 3, reps: "8-12",  demoUrl: "" },
+      { name: "Shoulder Press",    sets: 3, reps: "8-12",  demoUrl: "" },
+      { name: "Cable Flies",       sets: 3, reps: "12-15", demoUrl: "" },
+      { name: "Preacher Curls",    sets: 3, reps: "10",    demoUrl: "" },
+      { name: "Cable Curls",       sets: 3, reps: "12",    demoUrl: "" }
+    ]
+  },
+  beine: {
+    label: "Beine, Bauch",
+    exercises: [
+      { name: "Beinpresse",             sets: 3, reps: "8-12",  demoUrl: "" },
+      { name: "Rumänisches Kreuzheben", sets: 3, reps: "8-10",  demoUrl: "" },
+      { name: "Leg Extension",          sets: 3, reps: "12",    demoUrl: "" },
+      { name: "Leg Curl",               sets: 3, reps: "12",    demoUrl: "" },
+      { name: "Wadenheben",             sets: 4, reps: "12-15", demoUrl: "" },
+      { name: "Ab-/Adduktoren",         sets: 2, reps: "15",    demoUrl: "" },
+      { name: "Cable Crunches",         sets: 3, reps: "10-15", demoUrl: "" }
+    ]
+  }
+};
+
+const TAB_NAMES = { ruecken: "Rücken", brust: "Brust", beine: "Beine" };
+
+const KEY = {
+  plan:    "wt.plan.v1",
+  history: "wt.history.v1",
+  drafts:  "wt.drafts.v1",
+  ui:      "wt.ui.v1"
+};
+
+/* ============================================================
+   2. Storage-Helfer
+   ============================================================ */
+
+function load(key, fallback){
+  try{
+    const raw = localStorage.getItem(key);
+    if(raw === null) return fallback;
+    return JSON.parse(raw);
+  }catch(e){
+    console.warn("Konnte", key, "nicht lesen:", e);
+    return fallback;
+  }
+}
+function save(key, value){
+  try{
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  }catch(e){
+    toast("Speichern fehlgeschlagen – Speicher voll?");
+    console.error(e);
+    return false;
+  }
+}
+function uid(){
+  return "ex_" + Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4);
+}
+
+/* ============================================================
+   3. State
+   ============================================================ */
+
+let plan    = normalizePlan(load(KEY.plan, null) || structuredClone(DEFAULT_PLAN));
+let history = load(KEY.history, []);
+let drafts  = load(KEY.drafts, {});
+let ui      = Object.assign({ day: "ruecken", open: [] }, load(KEY.ui, {}));
+
+let planEditDay = null;   // Tag, der gerade im Editor bearbeitet wird
+let saveTimer   = null;
+
+if(!plan[ui.day]) ui.day = Object.keys(plan)[0];
+// Sofort zurückschreiben: so bleiben die generierten Übungs-IDs über Reloads
+// hinweg stabil – daran hängt der Verlauf (auch nach dem Umbenennen).
+save(KEY.plan, plan);
+
+/** Stellt sicher, dass jede Übung eine stabile id hat. */
+function normalizePlan(p){
+  if(!p || typeof p !== "object") p = structuredClone(DEFAULT_PLAN);
+  for(const key of Object.keys(p)){
+    const day = p[key];
+    if(!day || !Array.isArray(day.exercises)){ delete p[key]; continue; }
+    day.label = String(day.label || key);
+    day.exercises = day.exercises.map(ex => ({
+      id:      ex.id || uid(),
+      name:    String(ex.name || "Übung"),
+      sets:    Math.max(1, Math.min(12, parseInt(ex.sets,10) || 3)),
+      reps:    String(ex.reps == null ? "" : ex.reps),
+      demoUrl: String(ex.demoUrl || "")
+    }));
+  }
+  return p;
+}
+
+function persistPlan(){ save(KEY.plan, plan); }
+function persistDrafts(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => save(KEY.drafts, drafts), 150);
+}
+/** Sofort schreiben – z.B. wenn das Handy die Seite in den Hintergrund schiebt. */
+function flushDrafts(){
+  clearTimeout(saveTimer);
+  save(KEY.drafts, drafts);
+}
+window.addEventListener("pagehide", flushDrafts);
+document.addEventListener("visibilitychange", () => {
+  if(document.visibilityState === "hidden") flushDrafts();
+});
+function persistUi(){ save(KEY.ui, ui); }
+
+/* ============================================================
+   4. Kleine Helfer
+   ============================================================ */
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c => (
+    {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]
+  ));
+}
+function num(v){
+  if(v === null || v === undefined) return null;
+  const s = String(v).trim().replace(",", ".");
+  if(s === "") return null;
+  const n = parseFloat(s);
+  return isFinite(n) ? n : null;
+}
+function fmtKg(n){
+  if(n === null) return "";
+  return (Math.round(n*100)/100).toString().replace(".", ",");
+}
+function fmtDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString("de-CH", { day:"2-digit", month:"2-digit", year:"2-digit" });
+}
+function relDays(iso){
+  const a = new Date(iso); a.setHours(0,0,0,0);
+  const b = new Date();    b.setHours(0,0,0,0);
+  const diff = Math.round((b - a) / 86400000);
+  if(diff <= 0) return "heute";
+  if(diff === 1) return "gestern";
+  if(diff < 7)  return "vor " + diff + " Tagen";
+  return fmtDate(iso);
+}
+let toastTimer = null;
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+/* ============================================================
+   5. Verlauf abfragen
+   ============================================================ */
+
+/** Alle Sessions, neueste zuerst. */
+function sessionsDesc(){
+  return history.slice().sort((a,b) => new Date(b.date) - new Date(a.date));
+}
+
+/** Alle Einträge einer Übung (id, Name als Fallback), neueste zuerst. */
+function historyFor(ex){
+  const out = [];
+  for(const s of sessionsDesc()){
+    const e = (s.entries || []).find(x => x.exId === ex.id || x.name === ex.name);
+    if(e && e.sets && e.sets.length) out.push({ date: s.date, sets: e.sets });
+  }
+  return out;
+}
+
+/** Was war beim letzten Mal in diesem Satz? -> {w, r} oder null */
+function lastSet(ex, index){
+  const h = historyFor(ex);
+  if(!h.length) return null;
+  const sets = h[0].sets;
+  return sets[index] || sets[sets.length - 1] || null;
+}
+
+/** Arbeitsgewicht einer Einheit = schwerster Satz. */
+function topWeight(sets){
+  let max = null;
+  for(const s of sets){
+    if(s.w !== null && s.w !== undefined && (max === null || s.w > max)) max = s.w;
+  }
+  return max;
+}
+
+/* ============================================================
+   6. Draft (laufendes Training)
+   ============================================================ */
+
+function draftFor(dayKey){
+  if(!drafts[dayKey]) drafts[dayKey] = {};
+  return drafts[dayKey];
+}
+function draftSet(dayKey, exId, index){
+  const d = draftFor(dayKey);
+  if(!d[exId]) d[exId] = [];
+  if(!d[exId][index]) d[exId][index] = { w:"", r:"", done:false, touched:false };
+  return d[exId][index];
+}
+/** Vorausfüllen: leere, unberührte Felder mit den Werten vom letzten Mal befüllen. */
+function prefillDay(dayKey){
+  const day = plan[dayKey];
+  if(!day) return;
+  for(const ex of day.exercises){
+    for(let i = 0; i < ex.sets; i++){
+      const cell = draftSet(dayKey, ex.id, i);
+      if(cell.touched || cell.done) continue;
+      if(cell.w !== "" || cell.r !== "") continue;
+      const last = lastSet(ex, i);
+      if(last){
+        cell.w = last.w === null || last.w === undefined ? "" : String(last.w).replace(".", ",");
+        cell.r = last.r === null || last.r === undefined ? "" : String(last.r);
+      }
+    }
+  }
+  persistDrafts();
+}
+function dayProgress(dayKey){
+  const day = plan[dayKey];
+  let done = 0, total = 0;
+  if(!day) return { done, total };
+  for(const ex of day.exercises){
+    total += ex.sets;
+    const arr = (drafts[dayKey] || {})[ex.id] || [];
+    for(let i = 0; i < ex.sets; i++) if(arr[i] && arr[i].done) done++;
+  }
+  return { done, total };
+}
+function exProgress(dayKey, ex){
+  const arr = (drafts[dayKey] || {})[ex.id] || [];
+  let done = 0;
+  for(let i = 0; i < ex.sets; i++) if(arr[i] && arr[i].done) done++;
+  return done;
+}
+
+/* ============================================================
+   7. Rendern – Trainingsansicht
+   ============================================================ */
+
+const el = {
+  tabs:     document.getElementById("tabs"),
+  list:     document.getElementById("list"),
+  dayLabel: document.getElementById("dayLabel"),
+  progress: document.getElementById("progress"),
+  finish:   document.getElementById("btnFinish")
+};
+
+function renderTabs(){
+  el.tabs.innerHTML = Object.keys(plan).map(k => `
+    <button class="tab" role="tab" data-day="${esc(k)}" aria-selected="${k === ui.day}">
+      ${esc(TAB_NAMES[k] || plan[k].label.split(",")[0])}
+    </button>`).join("");
+}
+
+function renderHeader(){
+  const day = plan[ui.day];
+  el.dayLabel.textContent = day ? day.label : "";
+  const p = dayProgress(ui.day);
+  el.progress.innerHTML = `<b>${p.done}</b>/${p.total} Sätze`;
+  el.finish.disabled = p.done === 0 && !anyTouched(ui.day);
+}
+function anyTouched(dayKey){
+  const d = drafts[dayKey] || {};
+  return Object.values(d).some(arr => (arr || []).some(s => s && s.touched));
+}
+
+function demoHtml(ex){
+  if(!ex.demoUrl){
+    return `<div class="demo-ph">
+      <span class="big">🎬</span>
+      Keine Demo hinterlegt.<br>
+      Im Plan-Editor (✎) eine <b>demoUrl</b> eintragen – GIF, Bild oder Video.
+    </div>`;
+  }
+  const isVideo = /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(ex.demoUrl);
+  if(isVideo){
+    return `<div class="demo"><video data-src="${esc(ex.demoUrl)}" muted loop autoplay playsinline
+      onerror="this.closest('.demo').outerHTML='&lt;div class=&quot;demo-ph&quot;&gt;Video konnte nicht geladen werden.&lt;/div&gt;'"></video></div>`;
+  }
+  return `<div class="demo"><img data-src="${esc(ex.demoUrl)}" alt="Demo: ${esc(ex.name)}" loading="lazy"
+    onerror="this.closest('.demo').outerHTML='&lt;div class=&quot;demo-ph&quot;&gt;Bild konnte nicht geladen werden.&lt;/div&gt;'"></div>`;
+}
+
+function setHtml(ex, i){
+  const cell = draftSet(ui.day, ex.id, i);
+  const last = lastSet(ex, i);
+  const lastTxt = last
+    ? `Letztes Mal: ${last.w !== null && last.w !== undefined ? fmtKg(last.w) + " kg" : "–"}${last.r ? " × " + last.r : ""}`
+    : "Letztes Mal: –";
+  return `
+    <div class="set${cell.done ? " done" : ""}" data-ex="${esc(ex.id)}" data-i="${i}">
+      <div class="lastline${last ? "" : " none"}">${esc(lastTxt)}</div>
+      <div class="setrow">
+        <div class="setno">${i+1}</div>
+        <label class="field">
+          <input class="inp-w" type="text" inputmode="decimal" enterkeyhint="next"
+                 placeholder="0" value="${esc(cell.w)}" aria-label="Gewicht Satz ${i+1}">
+          <span class="unit">kg</span>
+        </label>
+        <label class="field">
+          <input class="inp-r" type="text" inputmode="numeric" enterkeyhint="done"
+                 placeholder="0" value="${esc(cell.r)}" aria-label="Wiederholungen Satz ${i+1}">
+          <span class="unit">Wdh</span>
+        </label>
+        <button class="check" aria-pressed="${cell.done}" aria-label="Satz ${i+1} erledigt">✓</button>
+      </div>
+    </div>`;
+}
+
+function cardHtml(ex){
+  const done = exProgress(ui.day, ex);
+  const h = historyFor(ex);
+  const sub = `${ex.sets} × ${esc(ex.reps || "–")}` +
+    (h.length ? ` · zuletzt ${topWeight(h[0].sets) !== null ? fmtKg(topWeight(h[0].sets)) + " kg" : "–"} (${relDays(h[0].date)})` : " · noch keine Daten");
+  const badgeCls = done === 0 ? "" : (done >= ex.sets ? " full" : " part");
+  const open = ui.open.includes(ex.id);
+  let sets = "";
+  for(let i = 0; i < ex.sets; i++) sets += setHtml(ex, i);
+
+  return `
+  <section class="card${open ? " open" : ""}" data-ex="${esc(ex.id)}">
+    <button class="cardhead" data-toggle="${esc(ex.id)}">
+      <div class="ch-main">
+        <div class="ch-name">${esc(ex.name)}</div>
+        <div class="ch-sub">${sub}</div>
+      </div>
+      <div class="badge${badgeCls}">${done}/${ex.sets}</div>
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+           stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <div class="cardbody">
+      ${demoHtml(ex)}
+      ${sets}
+      <div class="cardfoot">
+        <button class="ghost" data-hist="${esc(ex.id)}">Verlauf ansehen</button>
+      </div>
+    </div>
+  </section>`;
+}
+
+function renderList(){
+  const day = plan[ui.day];
+  if(!day || !day.exercises.length){
+    el.list.innerHTML = `<div class="empty">Keine Übungen für diesen Tag.<br>Über ✎ oben rechts hinzufügen.</div>`;
+    return;
+  }
+  el.list.innerHTML = day.exercises.map(cardHtml).join("");
+  el.list.querySelectorAll(".card.open").forEach(loadDemo);
+}
+
+function loadDemo(card){
+  card.querySelectorAll("[data-src]").forEach(m => {
+    m.src = m.dataset.src;
+    m.removeAttribute("data-src");
+    if(m.tagName === "VIDEO"){ const p = m.play(); if(p && p.catch) p.catch(()=>{}); }
+  });
+}
+
+function render(){
+  renderTabs();
+  prefillDay(ui.day);
+  renderHeader();
+  renderList();
+}
+
+/* ============================================================
+   8. Events – Trainingsansicht
+   ============================================================ */
+
+el.tabs.addEventListener("click", e => {
+  const b = e.target.closest("[data-day]");
+  if(!b) return;
+  ui.day = b.dataset.day;
+  ui.open = [];
+  persistUi();
+  render();
+  window.scrollTo({ top:0 });
+});
+
+el.list.addEventListener("click", e => {
+  const head = e.target.closest("[data-toggle]");
+  if(head){
+    const id = head.dataset.toggle;
+    const card = head.closest(".card");
+    const willOpen = !card.classList.contains("open");
+    card.classList.toggle("open", willOpen);
+    ui.open = willOpen ? ui.open.concat([id]) : ui.open.filter(x => x !== id);
+    persistUi();
+    if(willOpen){
+      loadDemo(card);
+      setTimeout(() => card.scrollIntoView({ behavior:"smooth", block:"start" }), 60);
+    }
+    return;
+  }
+
+  const histBtn = e.target.closest("[data-hist]");
+  if(histBtn){ openHistory(histBtn.dataset.hist); return; }
+
+  const check = e.target.closest(".check");
+  if(check){
+    const setEl = check.closest(".set");
+    const cell = draftSet(ui.day, setEl.dataset.ex, parseInt(setEl.dataset.i,10));
+    cell.done = !cell.done;
+    // Beim Abhaken leere Felder mit dem Vorschlag füllen, damit nichts verloren geht
+    if(cell.done){
+      const w = setEl.querySelector(".inp-w"), r = setEl.querySelector(".inp-r");
+      cell.w = w.value; cell.r = r.value;
+    }
+    persistDrafts();
+    check.setAttribute("aria-pressed", String(cell.done));
+    setEl.classList.toggle("done", cell.done);
+    updateCardBadge(setEl.dataset.ex);
+    renderHeader();
+    if(cell.done && navigator.vibrate) navigator.vibrate(12);
+    return;
+  }
+});
+
+el.list.addEventListener("input", e => {
+  const inp = e.target;
+  if(!inp.classList.contains("inp-w") && !inp.classList.contains("inp-r")) return;
+  const setEl = inp.closest(".set");
+  const cell = draftSet(ui.day, setEl.dataset.ex, parseInt(setEl.dataset.i,10));
+  if(inp.classList.contains("inp-w")) cell.w = inp.value; else cell.r = inp.value;
+  cell.touched = true;
+  persistDrafts();
+  renderHeader();
+});
+
+function updateCardBadge(exId){
+  const day = plan[ui.day];
+  const ex = day.exercises.find(x => x.id === exId);
+  if(!ex) return;
+  const card = el.list.querySelector(`.card[data-ex="${CSS.escape(exId)}"]`);
+  if(!card) return;
+  const done = exProgress(ui.day, ex);
+  const badge = card.querySelector(".badge");
+  badge.textContent = done + "/" + ex.sets;
+  badge.className = "badge" + (done === 0 ? "" : (done >= ex.sets ? " full" : " part"));
+}
+
+/* ============================================================
+   9. Training beenden
+   ============================================================ */
+
+el.finish.addEventListener("click", () => {
+  const day = plan[ui.day];
+  const entries = [];
+  for(const ex of day.exercises){
+    const arr = (drafts[ui.day] || {})[ex.id] || [];
+    const sets = [];
+    for(let i = 0; i < ex.sets; i++){
+      const c = arr[i];
+      if(!c) continue;
+      if(!c.done && !c.touched) continue;
+      const w = num(c.w), r = num(c.r);
+      if(w === null && r === null) continue;
+      sets.push({ w, r, done: !!c.done });
+    }
+    if(sets.length) entries.push({ exId: ex.id, name: ex.name, sets });
+  }
+
+  if(!entries.length){ toast("Noch nichts eingetragen"); return; }
+
+  const totalSets = entries.reduce((n,e) => n + e.sets.length, 0);
+  if(!confirm(`Training speichern?\n\n${day.label}\n${entries.length} Übungen, ${totalSets} Sätze`)) return;
+
+  history.push({
+    id: "s_" + Date.now(),
+    date: new Date().toISOString(),
+    dayKey: ui.day,
+    dayLabel: day.label,
+    entries
+  });
+  save(KEY.history, history);
+
+  delete drafts[ui.day];
+  save(KEY.drafts, drafts);
+  ui.open = [];
+  persistUi();
+  render();
+  window.scrollTo({ top:0, behavior:"smooth" });
+  toast("Gespeichert – " + totalSets + " Sätze 💪");
+});
+
+/* ============================================================
+   10. Verlauf-Sheet
+   ============================================================ */
+
+function chartSvg(points){
+  // points: [{date, y}] – ältestes zuerst
+  const W = 320, H = 130, L = 38, R = 10, T = 14, B = 22;
+  if(points.length < 2){
+    return `<div class="hint" style="text-align:center;padding:16px 0">
+      Diagramm ab dem zweiten Training.</div>`;
+  }
+  const ys = points.map(p => p.y);
+  let min = Math.min(...ys), max = Math.max(...ys);
+  if(min === max){ min -= 2.5; max += 2.5; }
+  const pad = (max - min) * 0.15;
+  min -= pad; max += pad;
+  const px = i => L + (W - L - R) * (points.length === 1 ? 0.5 : i / (points.length - 1));
+  const py = v => T + (H - T - B) * (1 - (v - min) / (max - min));
+  const line = points.map((p,i) => `${px(i).toFixed(1)},${py(p.y).toFixed(1)}`).join(" ");
+  const area = `${L},${H-B} ${line} ${px(points.length-1).toFixed(1)},${H-B}`;
+  const dots = points.map((p,i) =>
+    `<circle cx="${px(i).toFixed(1)}" cy="${py(p.y).toFixed(1)}" r="3.5" fill="#4f8cff" stroke="#141821" stroke-width="2"/>`
+  ).join("");
+  const hi = Math.max(...ys), lo = Math.min(...ys);
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img"
+    aria-label="Verlauf des Arbeitsgewichts">
+    <line x1="${L}" y1="${T}" x2="${W-R}" y2="${T}" stroke="#2b3446" stroke-width="1"/>
+    <line x1="${L}" y1="${H-B}" x2="${W-R}" y2="${H-B}" stroke="#2b3446" stroke-width="1"/>
+    <text x="6" y="${T+4}" fill="#6b7689" font-size="10" font-family="sans-serif">${fmtKg(hi)}</text>
+    <text x="6" y="${H-B+4}" fill="#6b7689" font-size="10" font-family="sans-serif">${fmtKg(lo)}</text>
+    <polygon points="${area}" fill="#4f8cff" opacity="0.12"/>
+    <polyline points="${line}" fill="none" stroke="#4f8cff" stroke-width="2.5"
+      stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}
+    <text x="${L}" y="${H-6}" fill="#6b7689" font-size="10" font-family="sans-serif">${fmtDate(points[0].date)}</text>
+    <text x="${W-R}" y="${H-6}" fill="#6b7689" font-size="10" font-family="sans-serif" text-anchor="end">${fmtDate(points[points.length-1].date)}</text>
+  </svg>`;
+}
+
+function openHistory(exId){
+  const ex = plan[ui.day].exercises.find(x => x.id === exId);
+  if(!ex) return;
+  document.getElementById("histTitle").textContent = ex.name;
+  const h = historyFor(ex).slice(0, 10);
+  const body = document.getElementById("histBody");
+
+  if(!h.length){
+    body.innerHTML = `<div class="empty">Noch keine Einträge.<br>
+      Nach dem ersten „Training beenden" steht hier dein Verlauf.</div>`;
+  }else{
+    const chartPoints = h.slice().reverse()
+      .map(s => ({ date: s.date, y: topWeight(s.sets) }))
+      .filter(p => p.y !== null);
+    const best = Math.max(...h.map(s => topWeight(s.sets) ?? -Infinity));
+
+    const rows = h.map(s => `
+      <div class="hentry">
+        <div class="hdate">${fmtDate(s.date)}${relDays(s.date) === fmtDate(s.date) ? "" : " · " + relDays(s.date)}</div>
+        <div class="hsets">${s.sets.map(x =>
+          `${x.w !== null ? fmtKg(x.w) : "–"}<span> kg × </span>${x.r !== null ? x.r : "–"}`
+        ).join('<span> · </span>')}</div>
+      </div>`).join("");
+
+    body.innerHTML = `
+      <div class="block">
+        <h3>Arbeitsgewicht (schwerster Satz)</h3>
+        <div class="chartwrap">${chartSvg(chartPoints)}</div>
+        ${isFinite(best) ? `<p class="hint">Bestwert: <b>${fmtKg(best)} kg</b></p>` : ""}
+      </div>
+      <div class="block">
+        <h3>Letzte ${h.length} Trainings</h3>
+        ${rows}
+      </div>`;
+  }
+  openSheet("sheetHist");
+}
+
+/* ============================================================
+   11. Plan-Editor
+   ============================================================ */
+
+function renderPlanEditor(){
+  if(!plan[planEditDay]) planEditDay = Object.keys(plan)[0];
+  const day = plan[planEditDay];
+
+  document.getElementById("planTabs").innerHTML = Object.keys(plan).map(k => `
+    <button class="tab" data-planday="${esc(k)}" aria-selected="${k === planEditDay}">
+      ${esc(TAB_NAMES[k] || plan[k].label.split(",")[0])}
+    </button>`).join("");
+
+  document.getElementById("planLabel").value = day.label;
+
+  document.getElementById("planList").innerHTML = day.exercises.map((ex, i) => `
+    <div class="exrow" data-ex="${esc(ex.id)}" data-idx="${i}">
+      <div class="top">
+        <input class="txt f-name" value="${esc(ex.name)}" placeholder="Name der Übung">
+        <button class="mini" data-move="up" aria-label="nach oben">↑</button>
+        <button class="mini" data-move="down" aria-label="nach unten">↓</button>
+        <button class="mini del" data-del="1" aria-label="löschen">🗑</button>
+      </div>
+      <div class="row2">
+        <div>
+          <label class="lbl" style="margin-top:0">Sätze</label>
+          <input class="txt f-sets" type="text" inputmode="numeric" value="${esc(ex.sets)}">
+        </div>
+        <div>
+          <label class="lbl" style="margin-top:0">Wiederholungen</label>
+          <input class="txt f-reps" value="${esc(ex.reps)}" placeholder="8-12">
+        </div>
+      </div>
+      <label class="lbl">demoUrl (GIF / Bild / Video)</label>
+      <input class="txt f-demo" value="${esc(ex.demoUrl)}" placeholder="leer lassen oder z.B. demos/latzug.mp4"
+             inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false">
+    </div>`).join("");
+}
+
+document.getElementById("planTabs").addEventListener("click", e => {
+  const b = e.target.closest("[data-planday]");
+  if(!b) return;
+  planEditDay = b.dataset.planday;
+  renderPlanEditor();
+});
+
+document.getElementById("planLabel").addEventListener("input", e => {
+  plan[planEditDay].label = e.target.value;
+  persistPlan();
+});
+
+document.getElementById("planList").addEventListener("input", e => {
+  const row = e.target.closest(".exrow");
+  if(!row) return;
+  const ex = plan[planEditDay].exercises.find(x => x.id === row.dataset.ex);
+  if(!ex) return;
+  if(e.target.classList.contains("f-name")) ex.name = e.target.value;
+  if(e.target.classList.contains("f-reps")) ex.reps = e.target.value;
+  if(e.target.classList.contains("f-demo")) ex.demoUrl = e.target.value.trim();
+  if(e.target.classList.contains("f-sets")){
+    const n = parseInt(e.target.value, 10);
+    if(isFinite(n) && n >= 1 && n <= 12) ex.sets = n;
+  }
+  persistPlan();
+});
+
+document.getElementById("planList").addEventListener("click", e => {
+  const row = e.target.closest(".exrow");
+  if(!row) return;
+  const list = plan[planEditDay].exercises;
+  const i = parseInt(row.dataset.idx, 10);
+
+  const mv = e.target.closest("[data-move]");
+  if(mv){
+    const j = mv.dataset.move === "up" ? i-1 : i+1;
+    if(j < 0 || j >= list.length) return;
+    [list[i], list[j]] = [list[j], list[i]];
+    persistPlan(); renderPlanEditor();
+    return;
+  }
+  if(e.target.closest("[data-del]")){
+    if(!confirm(`„${list[i].name}" aus dem Plan entfernen?\n\nDer Verlauf bleibt gespeichert.`)) return;
+    list.splice(i, 1);
+    persistPlan(); renderPlanEditor();
+  }
+});
+
+document.getElementById("btnAddEx").addEventListener("click", () => {
+  plan[planEditDay].exercises.push({ id: uid(), name:"Neue Übung", sets:3, reps:"8-12", demoUrl:"" });
+  persistPlan();
+  renderPlanEditor();
+  const rows = document.querySelectorAll("#planList .exrow");
+  const last = rows[rows.length-1];
+  if(last){ last.scrollIntoView({behavior:"smooth", block:"center"}); last.querySelector(".f-name").select(); }
+});
+
+/* ============================================================
+   12. Export / Import / Reset
+   ============================================================ */
+
+document.getElementById("btnExport").addEventListener("click", () => {
+  const data = {
+    app: "workout-tracker",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    plan, history, drafts
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:"application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const d = new Date();
+  const stamp = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  a.href = url;
+  a.download = "workout-tracker-" + stamp + ".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast("Export erstellt");
+});
+
+document.getElementById("btnImport").addEventListener("click", () => {
+  document.getElementById("fileImport").click();
+});
+
+document.getElementById("fileImport").addEventListener("change", e => {
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const data = JSON.parse(reader.result);
+      if(!data || typeof data !== "object" || !data.plan)
+        throw new Error("Kein gültiger Workout-Tracker-Export");
+      const cnt = Array.isArray(data.history) ? data.history.length : 0;
+      if(!confirm(`Import überschreibt alle aktuellen Daten.\n\nEnthalten: ${cnt} Trainings.\nFortfahren?`)) return;
+      plan    = normalizePlan(data.plan);
+      history = Array.isArray(data.history) ? data.history : [];
+      drafts  = (data.drafts && typeof data.drafts === "object") ? data.drafts : {};
+      if(!plan[ui.day]) ui.day = Object.keys(plan)[0];
+      ui.open = [];
+      persistPlan(); save(KEY.history, history); save(KEY.drafts, drafts); persistUi();
+      planEditDay = ui.day;
+      render(); renderStats();
+      closeSheet("sheetData");
+      toast("Import erfolgreich");
+    }catch(err){
+      alert("Import fehlgeschlagen: " + err.message);
+    }finally{
+      e.target.value = "";
+    }
+  };
+  reader.readAsText(file);
+});
+
+document.getElementById("btnResetPlan").addEventListener("click", () => {
+  if(!confirm("Plan auf die Standardübungen zurücksetzen?\n\nDer Verlauf bleibt erhalten.")) return;
+  plan = normalizePlan(structuredClone(DEFAULT_PLAN));
+  persistPlan();
+  planEditDay = ui.day = Object.keys(plan)[0];
+  ui.open = []; persistUi();
+  render(); renderPlanEditor(); renderStats();
+  toast("Plan zurückgesetzt");
+});
+
+document.getElementById("btnResetAll").addEventListener("click", () => {
+  if(!confirm("Wirklich ALLE Daten löschen?\n\nPlan, Verlauf und laufendes Training werden entfernt. Das lässt sich nicht rückgängig machen.")) return;
+  if(!confirm("Letzte Warnung: Hast du vorher exportiert?")) return;
+  Object.values(KEY).forEach(k => localStorage.removeItem(k));
+  plan = normalizePlan(structuredClone(DEFAULT_PLAN));
+  history = []; drafts = {};
+  ui = { day: Object.keys(plan)[0], open: [] };
+  planEditDay = ui.day;
+  persistPlan(); save(KEY.history, history); save(KEY.drafts, drafts); persistUi();
+  render(); renderPlanEditor(); renderStats();
+  toast("Alles gelöscht");
+});
+
+function renderStats(){
+  const sessions = history.length;
+  const last = sessions ? sessionsDesc()[0] : null;
+  let sets = 0;
+  for(const s of history) for(const e of (s.entries||[])) sets += e.sets.length;
+  let bytes = 0;
+  Object.values(KEY).forEach(k => { const v = localStorage.getItem(k); if(v) bytes += v.length; });
+  document.getElementById("stats").innerHTML =
+    `Trainings: <b>${sessions}</b><br>` +
+    `Gespeicherte Sätze: <b>${sets}</b><br>` +
+    `Letztes Training: <b>${last ? fmtDate(last.date) + " (" + esc(last.dayLabel || "") + ")" : "–"}</b><br>` +
+    `Speicherbedarf: <b>${(bytes/1024).toFixed(1)} KB</b>`;
+}
+
+/* ============================================================
+   13. Sheets öffnen / schliessen
+   ============================================================ */
+
+function openSheet(id){
+  document.getElementById(id).classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+function closeSheet(id){
+  document.getElementById(id).classList.remove("open");
+  if(!document.querySelector(".sheet.open")) document.body.style.overflow = "";
+}
+document.addEventListener("click", e => {
+  const c = e.target.closest("[data-close]");
+  if(c) closeSheet(c.dataset.close);
+});
+document.addEventListener("keydown", e => {
+  if(e.key === "Escape"){
+    const open = document.querySelector(".sheet.open");
+    if(open) closeSheet(open.id);
+  }
+});
+
+document.getElementById("btnPlan").addEventListener("click", () => {
+  planEditDay = ui.day;
+  renderPlanEditor();
+  openSheet("sheetPlan");
+});
+document.getElementById("btnData").addEventListener("click", () => {
+  renderStats();
+  openSheet("sheetData");
+});
+
+// Plan-Editor geschlossen -> Trainingsansicht neu aufbauen
+document.querySelector('#sheetPlan [data-close]').addEventListener("click", () => {
+  if(!plan[ui.day]) ui.day = Object.keys(plan)[0];
+  ui.open = ui.open.filter(id => plan[ui.day].exercises.some(x => x.id === id));
+  persistUi();
+  render();
+});
+
+/* ============================================================
+   14. Start
+   ============================================================ */
+
+planEditDay = ui.day;
+render();
+
+// Enter im Gewichtsfeld springt zu den Wiederholungen
+el.list.addEventListener("keydown", e => {
+  if(e.key !== "Enter") return;
+  const inp = e.target;
+  if(inp.classList.contains("inp-w")){
+    e.preventDefault();
+    inp.closest(".setrow").querySelector(".inp-r").focus();
+  }else if(inp.classList.contains("inp-r")){
+    e.preventDefault();
+    inp.blur();
+  }
+});
+
+})();
+</script>
+
+<script>
+/* Service Worker: sorgt dafür, dass die App nach dem ersten Aufruf auch ohne
+   Internet startet (Kellergym). Läuft nur über https:// oder localhost –
+   beim Öffnen als lokale Datei wird das hier einfach übersprungen. */
+if("serviceWorker" in navigator && location.protocol === "https:"){
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(err => {
+      console.warn("Service Worker nicht registriert:", err);
+    });
+  });
+}
+</script>
+</body>
+</html>
