@@ -72,10 +72,14 @@ git push -u origin main
 
 ## Demo-Animationen
 
-Fertig vorbereitet: `plan-mit-demos.json` enthält den Plan mit Bildern zu allen
-20 Übungen (frei lizenziert, von wger.de). Einlesen über ⚙ → *JSON importieren*.
-Die Datei hat bewusst **kein** `history`-Feld – dadurch wird nur der Plan
-ersetzt, gespeicherte Trainings bleiben erhalten.
+Am einfachsten: ⚙ → **Demo-Bilder laden**. Der Button holt `plan-mit-demos.json`
+von der eigenen Adresse und trägt für alle 20 Übungen ein frei lizenziertes Bild
+von wger.de ein (zusammen ca. 925 KB). Braucht Internet und funktioniert nur bei
+gehosteter App, nicht beim Öffnen als lokale Datei.
+
+Dieselbe Datei lässt sich auch von Hand über ⚙ → *JSON importieren* einlesen.
+Sie hat bewusst **kein** `history`-Feld – dadurch wird nur der Plan ersetzt,
+gespeicherte Trainings bleiben erhalten.
 
 Alternativ pro Übung im Plan-Editor (✎) das Feld `demoUrl` füllen – GIF, Bild oder Video.
 Externe Adressen müssen `https://` sein, sonst blockiert der Browser sie auf der

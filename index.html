@@ -293,7 +293,14 @@
     <div class="block">
       <h3>Demo-Animationen</h3>
       <p class="hint" style="margin-top:0">
-        Im Plan-Editor pro Übung eine <b>demoUrl</b> eintragen (GIF, PNG, MP4 oder WebM).
+        Ein Tipp genügt: setzt für alle 20 Übungen ein frei lizenziertes Bild von
+        wger.de ein (zusammen ca. 925 KB). Ersetzt nur den Plan – dein Verlauf bleibt.
+      </p>
+      <div class="btnrow">
+        <button class="btn primary" id="btnDemos" style="width:100%">Demo-Bilder laden</button>
+      </div>
+      <p class="hint">
+        Eigene Medien: im Plan-Editor pro Übung eine <b>demoUrl</b> eintragen (GIF, PNG, MP4 oder WebM).
         Auch lokale Pfade gehen, z.B. <code>demos/latzug.mp4</code> neben dieser Datei.<br><br>
         Frei nutzbare Quellen: <b>wger.de</b> (Open Source, freie Lizenz),
         <b>Wikimedia Commons</b> – oder im Gym selbst filmen. Fremde GIFs von
@@ -1040,6 +1047,28 @@ document.getElementById("btnImport").addEventListener("click", () => {
   document.getElementById("fileImport").click();
 });
 
+/** Übernimmt geprüfte Import-Daten. Bestätigt wird vorher vom Aufrufer.
+ *  Eine Datei ohne history-Feld gilt als reine Plan-Datei und lässt den
+ *  Verlauf unangetastet. Gibt "plan" oder "all" zurück. */
+function applyImport(data){
+  if(!data || typeof data !== "object" || !data.plan)
+    throw new Error("Kein gültiger Workout-Tracker-Export");
+  const planOnly = data.history === undefined;
+  if(planOnly){
+    plan = normalizePlan(adoptIds(data.plan, plan));
+  }else{
+    plan    = normalizePlan(data.plan);
+    history = Array.isArray(data.history) ? data.history : [];
+    drafts  = (data.drafts && typeof data.drafts === "object") ? data.drafts : {};
+  }
+  if(!plan[ui.day]) ui.day = Object.keys(plan)[0];
+  ui.open = [];
+  persistPlan(); save(KEY.history, history); save(KEY.drafts, drafts); persistUi();
+  planEditDay = ui.day;
+  render(); renderStats();
+  return planOnly ? "plan" : "all";
+}
+
 document.getElementById("fileImport").addEventListener("change", e => {
   const file = e.target.files && e.target.files[0];
   if(!file) return;
@@ -1049,26 +1078,15 @@ document.getElementById("fileImport").addEventListener("change", e => {
       const data = JSON.parse(reader.result);
       if(!data || typeof data !== "object" || !data.plan)
         throw new Error("Kein gültiger Workout-Tracker-Export");
-      // Datei ohne history-Feld = reine Plan-Datei (z.B. Plan mit Demo-URLs).
-      // Die darf den Verlauf nicht anfassen.
-      const planOnly = data.history === undefined;
-      if(planOnly){
+      if(data.history === undefined){
         if(!confirm("Nur der Trainingsplan wird ersetzt.\n\nDein Verlauf bleibt erhalten.\nFortfahren?")) return;
-        plan = normalizePlan(adoptIds(data.plan, plan));
       }else{
         const cnt = Array.isArray(data.history) ? data.history.length : 0;
         if(!confirm(`Import überschreibt alle aktuellen Daten.\n\nEnthalten: ${cnt} Trainings.\nFortfahren?`)) return;
-        plan    = normalizePlan(data.plan);
-        history = Array.isArray(data.history) ? data.history : [];
-        drafts  = (data.drafts && typeof data.drafts === "object") ? data.drafts : {};
       }
-      if(!plan[ui.day]) ui.day = Object.keys(plan)[0];
-      ui.open = [];
-      persistPlan(); save(KEY.history, history); save(KEY.drafts, drafts); persistUi();
-      planEditDay = ui.day;
-      render(); renderStats();
+      const art = applyImport(data);
       closeSheet("sheetData");
-      toast(planOnly ? "Plan importiert" : "Import erfolgreich");
+      toast(art === "plan" ? "Plan importiert" : "Import erfolgreich");
     }catch(err){
       alert("Import fehlgeschlagen: " + err.message);
     }finally{
@@ -1076,6 +1094,28 @@ document.getElementById("fileImport").addEventListener("change", e => {
     }
   };
   reader.readAsText(file);
+});
+
+/* Holt plan-mit-demos.json von der eigenen Adresse – erspart am Handy den
+   Umweg über Datei herunterladen und wieder auswählen. */
+document.getElementById("btnDemos").addEventListener("click", async () => {
+  const btn = document.getElementById("btnDemos");
+  if(!confirm("Demo-Bilder für alle Übungen laden?\n\nErsetzt den Trainingsplan.\nDein Verlauf bleibt erhalten.")) return;
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = "Lade …";
+  try{
+    const res = await fetch("plan-mit-demos.json", { cache: "no-cache" });
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    applyImport(await res.json());
+    closeSheet("sheetData");
+    toast("Demo-Bilder eingetragen");
+  }catch(err){
+    alert("Konnte die Demo-Datei nicht laden.\n\n" + err.message +
+          "\n\nOhne Internet oder beim Öffnen als lokale Datei geht das nicht – " +
+          "dann die JSON von Hand über „JSON importieren“ einlesen.");
+  }finally{
+    btn.disabled = false; btn.textContent = label;
+  }
 });
 
 document.getElementById("btnResetPlan").addEventListener("click", () => {
