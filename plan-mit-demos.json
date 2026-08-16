@@ -1,0 +1,142 @@
+{
+  "app": "workout-tracker",
+  "version": 1,
+  "hinweis": "Nur der Trainingsplan, kein Verlauf. Import ueber Zahnrad -> JSON importieren ersetzt ausschliesslich den Plan; bereits gespeicherte Trainings bleiben erhalten. Bilder von wger.de (frei lizenziert), 400x400-Thumbnails, zusammen ca. 925 KB.",
+  "plan": {
+    "ruecken": {
+      "label": "Rücken, Trizeps, Seitheben",
+      "exercises": [
+        {
+          "name": "Latzug",
+          "sets": 3,
+          "reps": "8-12",
+          "demoUrl": "https://wger.de/media/exercise-images/158/0d51a0f2-622f-434b-beb8-1a003c54712a.png.400x400_q85.jpg"
+        },
+        {
+          "name": "Wide Grip Row",
+          "sets": 3,
+          "reps": "8-12",
+          "demoUrl": "https://wger.de/media/exercise-images/143/Cable-seated-rows-2.png.400x400_q85.jpg"
+        },
+        {
+          "name": "Einarmiges Kurzhantelrudern",
+          "sets": 3,
+          "reps": "10/S",
+          "demoUrl": "https://wger.de/media/exercise-images/1637/a1fbe83a-a3e5-49f6-a2c2-5d5b533c2be8.png.400x400_q85.png"
+        },
+        {
+          "name": "Seitheben",
+          "sets": 3,
+          "reps": "12-15",
+          "demoUrl": "https://wger.de/media/exercise-images/1378/7c1fcf34-fb7e-45e7-a0c1-51f296235315.jpg.400x400_q85.jpg"
+        },
+        {
+          "name": "Trizeps Pushdown",
+          "sets": 3,
+          "reps": "10-12",
+          "demoUrl": "https://wger.de/media/exercise-images/805/7a437824-e2cc-46e1-804a-674f0ea31d25.png.400x400_q85.png"
+        },
+        {
+          "name": "Overhead Trizeps Extension",
+          "sets": 3,
+          "reps": "10-12",
+          "demoUrl": "https://wger.de/media/exercise-images/50/695ced5c-9961-4076-add2-cb250d01089e.png.400x400_q85.jpg"
+        },
+        {
+          "name": "Scap Flies",
+          "sets": 2,
+          "reps": "15",
+          "demoUrl": "https://wger.de/media/exercise-images/1098/fa5328a2-64cb-4afb-a283-b3d948ddaf3f.jpg.400x400_q85.jpg"
+        }
+      ]
+    },
+    "brust": {
+      "label": "Brust, Bizeps",
+      "exercises": [
+        {
+          "name": "Schrägbankdrücken",
+          "sets": 3,
+          "reps": "6-10",
+          "demoUrl": "https://wger.de/media/exercise-images/41/Incline-bench-press-1.png.400x400_q85.jpg"
+        },
+        {
+          "name": "Bankdrücken flach",
+          "sets": 3,
+          "reps": "8-12",
+          "demoUrl": "https://wger.de/media/exercise-images/192/Bench-press-1.png.400x400_q85.png"
+        },
+        {
+          "name": "Shoulder Press",
+          "sets": 3,
+          "reps": "8-12",
+          "demoUrl": "https://wger.de/media/exercise-images/478/70a2d72c-a822-45f3-8de2-54ea85951b84.jpg.400x400_q85.jpg"
+        },
+        {
+          "name": "Cable Flies",
+          "sets": 3,
+          "reps": "12-15",
+          "demoUrl": "https://wger.de/media/exercise-images/122/Incline-cable-flyes-1.png.400x400_q85.jpg"
+        },
+        {
+          "name": "Preacher Curls",
+          "sets": 3,
+          "reps": "10",
+          "demoUrl": "https://wger.de/media/exercise-images/193/Preacher-curl-3-1.png.400x400_q85.png"
+        },
+        {
+          "name": "Cable Curls",
+          "sets": 3,
+          "reps": "12",
+          "demoUrl": "https://wger.de/media/exercise-images/129/Standing-biceps-curl-1.png.400x400_q85.png"
+        }
+      ]
+    },
+    "beine": {
+      "label": "Beine, Bauch",
+      "exercises": [
+        {
+          "name": "Beinpresse",
+          "sets": 3,
+          "reps": "8-12",
+          "demoUrl": "https://wger.de/media/exercise-images/371/d2136f96-3a43-4d4c-9944-1919c4ca1ce1.webp.400x400_q85.png"
+        },
+        {
+          "name": "Rumänisches Kreuzheben",
+          "sets": 3,
+          "reps": "8-10",
+          "demoUrl": "https://wger.de/media/exercise-images/1652/0306c8c0-70cc-45d4-92de-6fa72ceaa834.webp.400x400_q85.jpg"
+        },
+        {
+          "name": "Leg Extension",
+          "sets": 3,
+          "reps": "12",
+          "demoUrl": "https://wger.de/media/exercise-images/369/78c915d1-e46d-4d30-8124-65d68664c3ef.png.400x400_q85.jpg"
+        },
+        {
+          "name": "Leg Curl",
+          "sets": 3,
+          "reps": "12",
+          "demoUrl": "https://wger.de/media/exercise-images/154/lying-leg-curl-machine-large-1.png.400x400_q85.jpg"
+        },
+        {
+          "name": "Wadenheben",
+          "sets": 4,
+          "reps": "12-15",
+          "demoUrl": "https://wger.de/media/exercise-images/1243/53d4fabe-c994-4907-873f-8d82813a9832.png.400x400_q85.jpg"
+        },
+        {
+          "name": "Ab-/Adduktoren",
+          "sets": 2,
+          "reps": "15",
+          "demoUrl": "https://wger.de/media/exercise-images/12/4a42cc6f-648d-40cc-a72a-c49dd47e1667.webp.400x400_q85.png"
+        },
+        {
+          "name": "Cable Crunches",
+          "sets": 3,
+          "reps": "10-15",
+          "demoUrl": "https://wger.de/media/exercise-images/1648/63ae02d6-6dd9-4e9e-84da-d4905e78a33c.jpg.400x400_q85.jpg"
+        }
+      ]
+    }
+  }
+}

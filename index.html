@@ -88,7 +88,11 @@
   .card.open .cardbody{display:block}
 
   /* ---------- Demo ---------- */
-  .demo{margin:14px 0;border-radius:12px;overflow:hidden;background:#0f131b;border:1px solid var(--line)}
+  /* min-height reserviert den Platz, solange das Bild noch lädt –
+     sonst springt das Layout beim Aufklappen. */
+  .demo{margin:14px 0;border-radius:12px;overflow:hidden;background:#0f131b;
+        border:1px solid var(--line);min-height:150px;
+        display:flex;align-items:center;justify-content:center}
   .demo img,.demo video{display:block;width:100%;max-height:230px;object-fit:contain;background:#0f131b}
   .demo-ph{
     padding:22px 14px;text-align:center;color:var(--dim);font-size:13px;line-height:1.5;
@@ -427,6 +431,21 @@ function normalizePlan(p){
   return p;
 }
 
+/** Übernimmt für gleichnamige Übungen die IDs des aktuellen Plans,
+ *  damit ein Plan-Import den bestehenden Verlauf nicht abhängt. */
+function adoptIds(incoming, current){
+  const byName = {};
+  for(const k of Object.keys(current || {}))
+    for(const ex of (current[k].exercises || [])) byName[ex.name] = ex.id;
+  for(const k of Object.keys(incoming || {})){
+    const day = incoming[k];
+    if(!day || !Array.isArray(day.exercises)) continue;
+    for(const ex of day.exercises)
+      if(!ex.id && byName[ex.name]) ex.id = byName[ex.name];
+  }
+  return incoming;
+}
+
 function persistPlan(){ save(KEY.plan, plan); }
 function persistDrafts(){
   clearTimeout(saveTimer);
@@ -615,7 +634,7 @@ function demoHtml(ex){
     return `<div class="demo"><video data-src="${esc(ex.demoUrl)}" muted loop autoplay playsinline
       onerror="this.closest('.demo').outerHTML='&lt;div class=&quot;demo-ph&quot;&gt;Video konnte nicht geladen werden.&lt;/div&gt;'"></video></div>`;
   }
-  return `<div class="demo"><img data-src="${esc(ex.demoUrl)}" alt="Demo: ${esc(ex.name)}" loading="lazy"
+  return `<div class="demo"><img data-src="${esc(ex.demoUrl)}" alt="Demo: ${esc(ex.name)}"
     onerror="this.closest('.demo').outerHTML='&lt;div class=&quot;demo-ph&quot;&gt;Bild konnte nicht geladen werden.&lt;/div&gt;'"></div>`;
 }
 
@@ -1030,18 +1049,26 @@ document.getElementById("fileImport").addEventListener("change", e => {
       const data = JSON.parse(reader.result);
       if(!data || typeof data !== "object" || !data.plan)
         throw new Error("Kein gültiger Workout-Tracker-Export");
-      const cnt = Array.isArray(data.history) ? data.history.length : 0;
-      if(!confirm(`Import überschreibt alle aktuellen Daten.\n\nEnthalten: ${cnt} Trainings.\nFortfahren?`)) return;
-      plan    = normalizePlan(data.plan);
-      history = Array.isArray(data.history) ? data.history : [];
-      drafts  = (data.drafts && typeof data.drafts === "object") ? data.drafts : {};
+      // Datei ohne history-Feld = reine Plan-Datei (z.B. Plan mit Demo-URLs).
+      // Die darf den Verlauf nicht anfassen.
+      const planOnly = data.history === undefined;
+      if(planOnly){
+        if(!confirm("Nur der Trainingsplan wird ersetzt.\n\nDein Verlauf bleibt erhalten.\nFortfahren?")) return;
+        plan = normalizePlan(adoptIds(data.plan, plan));
+      }else{
+        const cnt = Array.isArray(data.history) ? data.history.length : 0;
+        if(!confirm(`Import überschreibt alle aktuellen Daten.\n\nEnthalten: ${cnt} Trainings.\nFortfahren?`)) return;
+        plan    = normalizePlan(data.plan);
+        history = Array.isArray(data.history) ? data.history : [];
+        drafts  = (data.drafts && typeof data.drafts === "object") ? data.drafts : {};
+      }
       if(!plan[ui.day]) ui.day = Object.keys(plan)[0];
       ui.open = [];
       persistPlan(); save(KEY.history, history); save(KEY.drafts, drafts); persistUi();
       planEditDay = ui.day;
       render(); renderStats();
       closeSheet("sheetData");
-      toast("Import erfolgreich");
+      toast(planOnly ? "Plan importiert" : "Import erfolgreich");
     }catch(err){
       alert("Import fehlgeschlagen: " + err.message);
     }finally{
@@ -1156,7 +1183,9 @@ el.list.addEventListener("keydown", e => {
 /* Service Worker: sorgt dafür, dass die App nach dem ersten Aufruf auch ohne
    Internet startet (Kellergym). Läuft nur über https:// oder localhost –
    beim Öffnen als lokale Datei wird das hier einfach übersprungen. */
-if("serviceWorker" in navigator && location.protocol === "https:"){
+const swOk = location.protocol === "https:" ||
+             ["localhost","127.0.0.1"].includes(location.hostname);
+if("serviceWorker" in navigator && swOk){
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("sw.js").catch(err => {
       console.warn("Service Worker nicht registriert:", err);
