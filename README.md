@@ -72,7 +72,12 @@ git push -u origin main
 
 ## Demo-Animationen
 
-Pro Übung im Plan-Editor (✎) das Feld `demoUrl` füllen – GIF, Bild oder Video.
+Fertig vorbereitet: `plan-mit-demos.json` enthält den Plan mit Bildern zu allen
+20 Übungen (frei lizenziert, von wger.de). Einlesen über ⚙ → *JSON importieren*.
+Die Datei hat bewusst **kein** `history`-Feld – dadurch wird nur der Plan
+ersetzt, gespeicherte Trainings bleiben erhalten.
+
+Alternativ pro Übung im Plan-Editor (✎) das Feld `demoUrl` füllen – GIF, Bild oder Video.
 Externe Adressen müssen `https://` sein, sonst blockiert der Browser sie auf der
 gehosteten Seite. Einmal geladene Medien landen im Cache und funktionieren
 danach auch offline.
