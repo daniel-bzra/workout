@@ -1227,7 +1227,9 @@ const swOk = location.protocol === "https:" ||
              ["localhost","127.0.0.1"].includes(location.hostname);
 if("serviceWorker" in navigator && swOk){
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js").catch(err => {
+    // updateViaCache:"none" – auch sw.js selbst nie aus dem HTTP-Cache nehmen,
+    // sonst bleibt eine alte Cache-Strategie hängen.
+    navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).catch(err => {
       console.warn("Service Worker nicht registriert:", err);
     });
   });

@@ -14,7 +14,7 @@
  * Trainingsdaten liegen NICHT hier drin, sondern im localStorage.
  */
 
-const VERSION = "v2";
+const VERSION = "v3";
 const SHELL   = "wt-shell-" + VERSION;
 const MEDIA   = "wt-media-" + VERSION;
 
@@ -66,9 +66,14 @@ self.addEventListener("fetch", event => {
   const isShell = url.origin === self.location.origin && SHELL_PATHS.has(url.pathname);
 
   // 1. App-Dateien und Seitenaufrufe: erst Netz, dann Cache.
+  //    cache:"no-cache" erzwingt eine Rueckfrage beim Server. Ohne das liefert
+  //    der HTTP-Cache (GitHub Pages setzt max-age=600 auf HTML) bis zu zehn
+  //    Minuten die alte Datei – die dann auch noch hier im Cache landen wuerde.
+  //    Bei unveraendertem Inhalt antwortet der Server mit 304, kostet also kaum
+  //    Daten.
   if(req.mode === "navigate" || isShell){
     event.respondWith(
-      fetch(req)
+      fetch(req.url, { cache: "no-cache", credentials: "same-origin" })
         .then(res => {
           if(res && res.ok) event.waitUntil(cachePut(SHELL, req, res));
           return res;
